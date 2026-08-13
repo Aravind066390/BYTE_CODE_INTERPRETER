@@ -279,6 +279,21 @@ The interpreter currently contains a large collection of language features and e
 * Language parsing
 * Runtime execution
 
+
+---
+
+## 🚧 Current Status
+
+The project is considered feature-complete for its original scope.
+
+The interpreter currently supports a broad collection of language,
+runtime, mathematical, file, system, graphics, and experimental
+data/query operations.
+
+Development may be limited to bug fixes, maintenance, and occasional
+improvements.
+
+
 ---
 
 ## 👨‍💻 Author
