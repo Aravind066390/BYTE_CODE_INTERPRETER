@@ -1,37 +1,39 @@
 # BYTE CODE INTERPRETER
 
-A custom programming language and interpreter built from scratch using **C/C++**.
+A custom programming language and interpreter developed from scratch using **C and C++**.
 
-The project defines its own programming syntax (`.asmn`), language rules, runtime operations, mathematical functions, string operations, file handling, graphics, and database-style operations.
+The project uses a custom `.asmn` language and provides its own syntax, execution logic, runtime operations, mathematical functions, string operations, file handling, graphics, and experimental data/query operations.
 
-The goal of the project is to experiment with how programming languages and interpreters work by building the execution system from the ground up.
+The project was developed as an exploration of **interpreters, programming-language design, C/C++ programming, runtime execution, and low-level program control**.
 
 ---
 
-## 🚀 Features
+## ✨ Features
 
 ### Core Language
 
-* Variables and assignment
+The custom `.asmn` language supports:
+
+* Variables
 * Integer and floating-point values
-* String handling
+* Assignment
+* Printing and input
 * Conditional statements
 * Loops
-* Break statements
+* Break operations
 * Functions
 * Function calls
 * Return values
 * Local and global scope
 * Recursion
-* Basic expression evaluation
 * Control-flow operations
+* Expression evaluation
 
 ### Mathematical Operations
 
-The language provides built-in mathematical functionality including:
+The interpreter provides several mathematical operations, including:
 
-* Addition and subtraction
-* Multiplication and division
+* Arithmetic
 * Power
 * Square root
 * Factorial
@@ -39,27 +41,28 @@ The language provides built-in mathematical functionality including:
 * Trigonometric functions
 * Logarithmic functions
 * Mean
-* Minimum / maximum
+* Minimum and maximum
 * Prime-number operations
 * Other mathematical utilities
 
 ### String Operations
 
-The interpreter provides operations for:
+String functionality includes:
 
 * String concatenation
 * String length
 * Copying
-* Searching
 * Reversing
-* Character/string manipulation
+* Searching
+* Character manipulation
 * Encoding/encryption experiments
 
-### File and System Operations
+### File & System Operations
 
-The runtime supports operations such as:
+The runtime supports operations for:
 
-* Creating and writing files
+* Creating files
+* Writing files
 * Appending to files
 * Reading/displaying files
 * File size operations
@@ -70,7 +73,9 @@ The runtime supports operations such as:
 
 ### Graphics & Visualization
 
-The language also contains graphical functionality using **Raylib**, allowing programs to generate visual output such as:
+The interpreter integrates **Raylib** to provide graphical functionality.
+
+The language can be used for operations such as:
 
 * Graphs
 * Bar charts
@@ -78,9 +83,9 @@ The language also contains graphical functionality using **Raylib**, allowing pr
 * Character-based visualizations
 * Other graphical representations
 
-### Database / Query Experiments
+### Experimental Database / Query Operations
 
-The project also contains an experimental query subsystem with operations for:
+The project also contains an experimental query/data subsystem with operations for:
 
 * Creating keys
 * Adding data
@@ -93,11 +98,11 @@ The project also contains an experimental query subsystem with operations for:
 
 ---
 
-## 🧠 Language
+## 🧠 Custom `.asmn` Language
 
-Programs are written using the custom `.asmn` syntax.
+Programs are written using the project's custom `.asmn` syntax.
 
-Example:
+A simple example:
 
 ```text
 VAR A 10
@@ -107,9 +112,9 @@ p ^A
 p ^B
 ```
 
-The language also supports constructs for functions, loops, conditions, recursion and return values.
+The language also supports functions, loops, conditions and recursion.
 
-Example function structure:
+Example function concept:
 
 ```text
 fun{
@@ -119,157 +124,160 @@ fun{
 call ...
 ```
 
-See [`rules.txt`](rules.txt) for the complete language specification.
+The complete language specification is available in [`rules.txt`](rules.txt).
 
 ---
 
-## 🏗️ Project Architecture
+## ⚙️ How It Works
 
-The project currently consists of a main interpreter and a separate runtime/helper component.
+The project is divided conceptually into two major parts:
 
 ```text
-              .asmn Program
-                    │
-                    ▼
+             .asmn Program
+                   │
+                   ▼
               ┌───────────┐
-              │   n.c     │
+              │    n.c    │
               │ Interpreter│
               └─────┬─────┘
                     │
-          ┌─────────┴─────────┐
-          │                   │
-     Language Logic       Runtime Operations
-          │                   │
-          │                   ▼
-          │              origin.cpp
-          │                   │
-          │          ┌────────┼─────────┐
-          │          │        │         │
-          │         Math     Files    System
-          │          │        │         │
-          └──────────┴────────┴─────────┘
+                    │ Runtime operations
+                    ▼
+              ┌────────────┐
+              │ origin.cpp │
+              │   Runtime  │
+              └─────┬──────┘
                     │
+          ┌─────────┼─────────┐
+          ▼         ▼         ▼
+        Math      Files     System
+          │         │         │
+          └─────────┼─────────┘
                     ▼
                   Output
 ```
 
-`n.c` contains the main language/interpreter logic, while `origin.cpp` provides additional runtime functionality.
+### `n.c`
+
+Contains the main interpreter implementation responsible for reading and executing `.asmn` programs and handling language features such as:
+
+* Variables
+* Conditions
+* Loops
+* Functions
+* Recursion
+* Strings
+* Expressions
+* Graphics
+* Language control flow
+
+### `origin.cpp`
+
+Provides additional runtime functionality used by the interpreter, including mathematical, file, system and other operations.
 
 ---
 
-## 📁 Repository Structure
+## 📂 Current Repository Files
 
-```text
-BYTE_CODE_INTERPRETER/
-│
-├── src/
-│   ├── n.c
-│   └── origin.cpp
-│
-├── examples/
-│   ├── n.asmn
-│   ├── x.asmn
-│   ├── sine_wave.asmn
-│   ├── cos_wave.asmn
-│   └── tan_wave.asmn
-│
-├── tests/
-│   └── trialsere.txt
-│
-├── rules.txt
-└── README.md
-```
+The repository currently contains the following main components:
 
-### `src/`
-
-Contains the source code of the interpreter and runtime.
-
-### `examples/`
-
-Contains example programs written in the `.asmn` language.
-
-### `tests/`
-
-Contains experimental programs used to test language features such as recursion, scope, functions, loops, strings, graphics and file operations.
-
-### `rules.txt`
-
-Contains the language specification and available commands.
+| File             | Purpose                                   |
+| ---------------- | ----------------------------------------- |
+| `n.c`            | Main interpreter implementation           |
+| `origin.cpp`     | Runtime/helper implementation             |
+| `rules.txt`      | Language rules and command specification  |
+| `trialsere.txt`  | Collection of experimental/trial programs |
+| `n.asmn`         | Example `.asmn` program                   |
+| `x.asmn`         | Example `.asmn` program                   |
+| `sine_wave.asmn` | Sine-wave related example                 |
+| `cos_wave.asmn`  | Cosine-wave related example               |
+| `tan_wave.asmn`  | Tangent-wave related example              |
+| `n.exe`          | Compiled executable                       |
+| `origin.exe`     | Compiled runtime executable               |
+| `newer.exe`      | Compiled executable                       |
+| `syst.exe`       | Compiled executable                       |
+| `newer.html`     | Generated/output file                     |
+| `n.txt`          | Output/test data                          |
 
 ---
 
-## 🧪 Tested Language Features
+## 🧪 Testing
 
-The project has been tested with programs covering:
+The project has been tested using several experimental programs.
 
-* Variable handling
-* Local/global scope
+`trialsere.txt` contains tests for features including:
+
+* Variable scope
+* Local and global variables
 * Functions
 * Recursive functions
 * Return values
 * Loops
 * Conditional statements
 * String operations
-* Mathematical operations
 * File operations
 * Graphics
+* Mathematical operations
 * Data/query operations
-* Runtime operations
 
-Example programs are available in the `examples/` directory.
+These experiments were used during the development of the language to verify different interpreter features.
 
 ---
 
-## 🛠️ Technologies Used
+## 🛠️ Technologies
 
 * **C**
 * **C++**
 * **Raylib**
 * File I/O
-* Custom interpreter/runtime architecture
 * Custom `.asmn` language
+* Custom interpreter/runtime
 
 ---
 
 ## 🎯 Project Goals
 
-This project was created to explore:
+The main goals of this project are to explore:
 
-* How programming languages are designed
-* How interpreters process source code
+* Programming language design
+* Interpreter implementation
 * Expression evaluation
 * Variable and scope management
-* Function execution and recursion
+* Function execution
+* Recursion
 * Runtime design
 * File and system interaction
 * Graphics integration
-* Designing a custom language from scratch
+* Building a programming language from scratch
 
 ---
 
-## 📌 Current Status
+## 📖 Language Documentation
 
-The interpreter is an ongoing experimental project.
+The complete list of language commands and syntax is documented in:
 
-The language specification and implementation are continuously being expanded and refined.
+**[`rules.txt`](rules.txt)**
 
-Future improvements include:
+The trial programs and experiments are documented in:
 
-* Better error handling
-* Improved documentation
-* More structured testing
-* Cleaner source organization
-* Improved parsing
-* Further development of the intermediate representation/runtime
-* Performance improvements
+**[`trialsere.txt`](trialsere.txt)**
 
 ---
 
-## 📚 Documentation
+## 🚧 Current Status
 
-For the complete list of supported language constructs and commands:
+This is an ongoing programming-language project.
 
-**[Language Rules →](rules.txt)**
+The interpreter currently contains a large collection of language features and experimental runtime functionality. Future development will focus on improving:
+
+* Error handling
+* Stability
+* Documentation
+* Testing
+* Code organization
+* Performance
+* Language parsing
+* Runtime execution
 
 ---
 
@@ -277,4 +285,4 @@ For the complete list of supported language constructs and commands:
 
 **Aravind**
 
-Built as a personal systems/programming-language project to explore interpreters, C/C++ programming and language design.
+A personal project exploring **C/C++ programming, interpreters, programming-language design, runtime systems, and low-level software development.**
