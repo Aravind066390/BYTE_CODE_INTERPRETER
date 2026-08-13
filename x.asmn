@@ -1,0 +1,13 @@
+VAR A=76
+VAR B=7
+g 0 5
+[A]
+p value of A=^A;
+w
+[A]
+p /nvalue of A out of loop=^A;
+tr
+p /nthis block of code will be ignore and will not work;
+~
+p /nthis is out so it'll be printed;
+@

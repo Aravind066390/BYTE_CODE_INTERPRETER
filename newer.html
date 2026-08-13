@@ -1,0 +1,764 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Flow Visualizer — Enhanced Quality</title>
+<style>
+  :root{
+    --bg:#06080d;
+    --panel:#0b111a;
+    --accent:#66b3ff;
+  }
+
+  body{
+    background:#020204;
+    color:white;
+    font-family:Consolas,monospace;
+    margin:0;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .wrapper{
+    padding:20px;
+    max-width:1200px;
+    margin:auto;
+  }
+
+  #canvas{
+    background:var(--bg);
+    border:1px solid #222;
+    border-radius:12px;
+    padding:10px;
+    margin-bottom:20px;
+  }
+
+  textarea{
+    width:100%;
+    height:150px;
+    background:#0b111a;
+    color:#8fff8f;
+    border:1px solid #0f3;
+    border-radius:8px;
+    padding:10px;
+    box-sizing:border-box;
+    font-family:Consolas,monospace;
+    font-size:14px;
+  }
+
+  button{
+    margin-top:10px;
+    padding:10px 20px;
+    background:#66b3ff;
+    border:none;
+    border-radius:6px;
+    font-weight:bold;
+    cursor:pointer;
+    color:#000;
+    margin-right:10px;
+  }
+
+  button:hover{
+    background:#88c5ff;
+  }
+
+  button.debug{
+    background:#ff4444;
+    color:#fff;
+  }
+
+  button.debug:hover{
+    background:#ff6666;
+  }
+
+  .status-bar{
+    margin-top:15px;
+    padding:12px;
+    background:#0b111a;
+    border-radius:8px;
+    border:1px solid #222;
+    font-size:13px;
+    min-height:20px;
+  }
+
+  .status-ok{
+    color:#0f3;
+  }
+
+  .status-warn{
+    color:#ffd166;
+  }
+
+  .status-error{
+    color:#ff4444;
+  }
+
+  .node{
+    stroke-width:3;
+    fill:rgba(0,0,0,0.35);
+    cursor:pointer;
+    transition: all 0.3s ease;
+  }
+
+  .bigbox{
+    stroke:#00e6e6;
+    fill:rgba(0,0,0,0.25);
+    stroke-width:4;
+    cursor:pointer;
+    transition: all 0.3s ease;
+  }
+
+  .inner{
+    stroke-width:3;
+    fill:rgba(0,0,0,0.22);
+    cursor:pointer;
+    transition: all 0.3s ease;
+  }
+
+  .inner#interpreter{
+    filter:drop-shadow(0 0 4px rgba(255,0,255,0.3));
+  }
+
+  .wire{
+    stroke-width:5;
+    stroke:rgba(102,179,255,0);
+    fill:none;
+    transition: all 0.3s ease;
+    stroke-linecap:round;
+  }
+
+  .wire.internal{
+    stroke-width:4;
+    stroke:rgba(255,255,255,0);
+  }
+
+  .active{
+    filter:drop-shadow(0 0 12px);
+  }
+
+  /* Tooltip */
+  .tooltip {
+    position: absolute;
+    background: #111;
+    border: 1px solid #555;
+    padding: 6px 10px;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 13px;
+    pointer-events: none;
+    display: none;
+    z-index: 999;
+  }
+
+  /* Clickable details box */
+  #detailsBox {
+    position:absolute;
+    background:#111;
+    border:1px solid #00e6e6;
+    border-radius:8px;
+    padding:8px 12px;
+    font-size:14px;
+    color:white;
+    display:none;
+    z-index:1000;
+    max-width:320px;
+    box-shadow: 0 6px 30px rgba(0,0,0,0.7);
+  }
+
+  /* Blue glow (missing @) */
+  @keyframes glowBlue {
+    0%{ 
+      filter:drop-shadow(0 0 8px rgba(102,179,255,0.6)) drop-shadow(0 0 16px rgba(102,179,255,0.4));
+    }
+    50%{ 
+      filter:drop-shadow(0 0 20px rgba(102,179,255,1)) drop-shadow(0 0 35px rgba(102,179,255,0.8));
+    }
+    100%{ 
+      filter:drop-shadow(0 0 8px rgba(102,179,255,0.6)) drop-shadow(0 0 16px rgba(102,179,255,0.4));
+    }
+  }
+
+  /* Red glow (missing import) */
+  @keyframes glowRed {
+    0%{ 
+      filter:drop-shadow(0 0 8px rgba(255,68,68,0.6)) drop-shadow(0 0 16px rgba(255,68,68,0.4));
+    }
+    50%{ 
+      filter:drop-shadow(0 0 25px rgba(255,68,68,1)) drop-shadow(0 0 40px rgba(255,68,68,0.8));
+    }
+    100%{ 
+      filter:drop-shadow(0 0 8px rgba(255,68,68,0.6)) drop-shadow(0 0 16px rgba(255,68,68,0.4));
+    }
+  }
+
+  /* Purple glow (both errors) */
+  @keyframes glowPurple {
+    0%{ 
+      filter:drop-shadow(0 0 10px rgba(255,68,255,0.6)) drop-shadow(0 0 18px rgba(102,179,255,0.4));
+    }
+    50%{ 
+      filter:drop-shadow(0 0 30px rgba(255,68,255,1)) drop-shadow(0 0 45px rgba(102,179,255,0.8));
+    }
+    100%{ 
+      filter:drop-shadow(0 0 10px rgba(255,68,255,0.6)) drop-shadow(0 0 18px rgba(102,179,255,0.4));
+    }
+  }
+
+  /* Apply to the SVG rect (mainbox) */
+  .glow-blue{
+    animation: glowBlue 1.5s ease-in-out infinite;
+  }
+  .glow-red{
+    animation: glowRed 1.5s ease-in-out infinite;
+  }
+  .glow-blue.glow-red{
+    animation: glowPurple 1.5s ease-in-out infinite;
+  }
+
+  @media (max-width:1100px){
+    svg{ width:100% !important; height:auto !important; }
+  }
+
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <div id="canvas">
+    <svg id="svg" width="1000" height="700" style="display:block;" viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid meet">
+
+      <defs>
+        <!-- Glow filters for wires -->
+        <filter id="wireGlow">
+          <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+          <feMerge>
+            <feMergeNode in="coloredBlur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+
+      <!-- Tooltip -->
+      <foreignObject id="tooltip" class="tooltip" width="1" height="1"></foreignObject>
+
+      <!-- Details box -->
+      <foreignObject id="detailsBox" class="details" width="1" height="1"></foreignObject>
+
+      <!-- BIG BOX - slightly reduced -->
+      <rect id="mainbox" x="200" y="80" width="560" height="480" rx="15"
+            class="bigbox" data-tip="Main Hub: controls Compiler, Interpreter and Libraries"></rect>
+
+      <!-- LABEL -->
+      <text x="480" y="110" fill="white" font-size="18" text-anchor="middle" font-weight="bold">
+        main.c — Central Hub
+      </text>
+
+      <!-- COMPILER -->
+      <rect id="compiler" x="250" y="160" width="460" height="60" rx="10"
+            class="inner" stroke="#00fdfd"
+            data-tip="Compiler: converts your language rules into IR"></rect>
+      <text x="480" y="195" fill="#00fdfd" font-size="14" text-anchor="middle" font-weight="bold">Compiler</text>
+
+      <!-- INTERPRETER -->
+      <rect id="interpreter" x="250" y="260" width="460" height="60" rx="10"
+            class="inner" stroke="#ff00ff"
+            data-tip="Interpreter: executes IR and handles runtime"></rect>
+      <text x="480" y="295" fill="#ff00ff" font-size="14" text-anchor="middle" font-weight="bold">Interpreter</text>
+
+      <!-- LIBRARIES -->
+      <rect id="libraries" x="250" y="380" width="460" height="120" rx="10"
+            class="inner" stroke="#ff66b2"
+            data-tip="Libraries: math, system, modules, add/min/max/force operations"></rect>
+      <text x="480" y="445" fill="#ff66b2" font-size="14" text-anchor="middle" font-weight="bold">Libraries</text>
+
+      <!-- External nodes -->
+      <!-- Python Frontend: bigger than life.cpp -->
+      <rect id="pyfront" x="30" y="140" width="160" height="80" rx="10"
+            class="node" stroke="#66b3ff"
+            data-tip="Python Frontend: IDE input and UI"></rect>
+      <text x="110" y="185" fill="#66b3ff" font-size="14" text-anchor="middle" font-weight="bold">Python Frontend</text>
+
+      <!-- ORIGIN.CPP: biggest external block - moved left -->
+      <rect id="origincpp" x="780" y="100" width="200" height="100" rx="10"
+            class="node" stroke="#00ff7f"
+            data-tip="origin.cpp: backend logic invoked via &lt;O or &lt;OP"></rect>
+      <text x="880" y="145" fill="#00ff7f" font-size="16" text-anchor="middle" font-weight="bold">origin.cpp</text>
+      <text x="880" y="170" fill="#00ff7f" font-size="12" text-anchor="middle">&lt;O / &lt;OP</text>
+
+      <!-- life.cpp: smallest -->
+      <rect id="lifecpp" x="860" y="520" width="120" height="55" rx="10"
+            class="node" stroke="#ffd166"
+            data-tip="life.cpp (MLK): MLK rule executor"></rect>
+      <text x="920" y="552" fill="#ffd166" font-size="13" text-anchor="middle" font-weight="bold">life.cpp (MLK)</text>
+
+      <!-- External wires -->
+      <!-- Frontend: input to Compiler -->
+      <path id="w_front_main" d="M190 180 C220 180 240 185 250 190"
+            class="wire" data-tip="Python → Compiler"></path>
+      
+      <!-- Frontend: output from Interpreter to Python Frontend -->
+      <path id="w_main_front" d="M250 290 C220 270 180 220 110 210"
+            class="wire" data-tip="Interpreter → Python (return)"></path>
+
+      <!-- Origin.cpp connections: from Libraries, received by Interpreter -->
+      <path id="w_main_origin" d="M710 430 C740 350 780 200 780 150"
+            class="wire" data-tip="Libraries → origin.cpp"></path>
+      
+      <path id="w_origin_main" d="M780 150 C740 200 710 280 710 280"
+            class="wire" data-tip="origin.cpp → Interpreter (return)"></path>
+
+      <!-- Origin to Life connection (for <O View) -->
+      <path id="w_origin_life" d="M880 200 C880 350 900 480 900 520"
+            class="wire" data-tip="origin.cpp → life.cpp"></path>
+
+      <path id="w_life_origin" d="M900 520 C900 480 880 350 880 200"
+            class="wire" data-tip="life.cpp → origin.cpp (return)"></path>
+
+      <!-- Life.cpp connections: from Libraries, received by Interpreter -->
+      <path id="w_life_main" d="M900 520 C880 480 780 350 710 310"
+            class="wire" data-tip="life.cpp → Interpreter (return)"></path>
+      
+      <path id="w_main_life" d="M710 460 C780 470 880 500 900 520"
+            class="wire" data-tip="Libraries → life.cpp"></path>
+
+      <!-- Internal wires (no return needed) -->
+      <path id="w_comp_interp"
+            d="M500 220 L500 260"
+            class="wire internal" data-tip="Compiler → Interpreter"></path>
+
+      <path id="w_interp_lib"
+            d="M500 320 L500 380"
+            class="wire internal" data-tip="Interpreter → Libraries"></path>
+
+      <!-- pulse layer -->
+      <g id="pulseLayer"></g>
+
+    </svg>
+  </div>
+
+  <textarea id="code" placeholder="Enter your DSL code here... (must end with @)">@</textarea>
+  <button onclick="runFlow()">▶ Run Flow</button>
+  <button class="debug" onclick="debugFix()">🔧 Auto-Fix</button>
+
+  <div id="statusBar" class="status-bar status-ok">Ready. Waiting for input...</div>
+
+</div>
+
+<script>
+/* ----------------------- ELEMENTS ----------------------- */
+const tooltipFO = document.getElementById("tooltip");
+const detailsFO = document.getElementById("detailsBox");
+const svg = document.getElementById("svg");
+const pulseLayer = document.getElementById("pulseLayer");
+const mainRect = document.getElementById("mainbox");
+const statusBar = document.getElementById("statusBar");
+
+/* Helper to set foreignObject HTML and position */
+function showFO(elFO, html, x, y){
+  elFO.setAttribute("x", x);
+  elFO.setAttribute("y", y);
+  elFO.setAttribute("width", 320);
+  elFO.setAttribute("height", 200);
+  elFO.innerHTML = `<div xmlns="http://www.w3.org/1999/xhtml" style="pointer-events:auto;">${html}</div>`;
+  elFO.style.display = "block";
+}
+
+/* ----------------------- TOOLTIP (hover) ----------------------- */
+document.querySelectorAll("[data-tip]").forEach(el => {
+  el.addEventListener("mousemove", e => {
+    const txt = el.getAttribute("data-tip") || "";
+    tooltipFO.style.display = "block";
+    const pt = svg.createSVGPoint();
+    pt.x = e.clientX;
+    pt.y = e.clientY;
+    const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
+    showFO(tooltipFO, txt, svgPt.x + 12, svgPt.y + 12);
+  });
+  
+  el.addEventListener("mouseleave", () => {
+    tooltipFO.style.display = "none";
+    tooltipFO.innerHTML = "";
+  });
+
+  el.addEventListener("click", e => {
+    e.stopPropagation();
+    const txt = el.getAttribute("data-tip") || "";
+    const pt = svg.createSVGPoint();
+    pt.x = e.clientX;
+    pt.y = e.clientY;
+    const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
+    showFO(detailsFO, `<strong>Info</strong><div style="margin-top:6px;">${escapeHtml(txt)}</div>`, svgPt.x + 12, svgPt.y + 12);
+  });
+});
+
+document.addEventListener("click", e => {
+  if(!e.target.closest("rect")){
+    detailsFO.style.display = "none";
+    detailsFO.innerHTML = "";
+  }
+});
+
+function escapeHtml(s){
+  return String(s)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;");
+}
+
+/* ----------------------- PULSE SYSTEM ----------------------- */
+function pulse(path, color, size = 8){
+  const p = document.createElementNS("http://www.w3.org/2000/svg","circle");
+  p.setAttribute("r", size);
+  p.setAttribute("fill", color);
+  p.style.filter = `drop-shadow(0 0 12px ${color}) drop-shadow(0 0 6px ${color})`;
+  pulseLayer.appendChild(p);
+
+  const len = path.getTotalLength();
+  let start = null;
+
+  function anim(t){
+    if(!start) start = t;
+    const d = t - start;
+    const ratio = Math.min(1, d/900);
+    const pt = path.getPointAtLength(len * ratio);
+    p.setAttribute("cx", pt.x);
+    p.setAttribute("cy", pt.y);
+    
+    // Pulsate effect
+    const pulseSize = size + Math.sin(ratio * Math.PI * 4) * 2;
+    p.setAttribute("r", pulseSize);
+
+    if(ratio < 1) requestAnimationFrame(anim);
+    else p.remove();
+  }
+  requestAnimationFrame(anim);
+}
+
+function activate(id, color, delay = 0){
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const w = document.getElementById(id);
+      if(!w) {
+        resolve();
+        return;
+      }
+      
+      w.classList.add("active");
+      w.style.stroke = color;
+      w.style.strokeWidth = "8";
+      w.style.filter = `drop-shadow(0 0 8px ${color})`;
+      
+      pulse(w, color, 9);
+
+      setTimeout(()=>{
+        w.classList.remove("active");
+        w.style.stroke = "rgba(0,0,0,0)"; // Invisible after animation
+        w.style.strokeWidth = "";
+        w.style.filter = "";
+        resolve();
+      }, 1100);
+    }, delay);
+  });
+}
+
+/* ---------------------- IMPORT & ACCESS CHECK ---------------------- */
+function validateImports(code){
+  const lines = code.split("\n");
+  for(let l of lines){
+    const trimmed = l.trim();
+    if(trimmed.startsWith("import") || trimmed.startsWith("impor")){
+      const ok = /^(impor\*|import\s+[A-Za-z0-9_.-]+)$/.test(trimmed);
+      if(!ok) return {valid: false, error: `Invalid import syntax: "${trimmed}"`};
+    }
+  }
+  return {valid: true};
+}
+
+function validateAccessRequirements(code){
+  const hasImportAll = code.includes("impor*");
+  const hasFileA = hasImportAll || code.includes("import file.a");
+  const hasForksA = hasImportAll || code.includes("import forks.a");
+  const errors = [];
+
+  if((code.includes("<O") || code.includes("<OP")) && !hasFileA) {
+    errors.push("Missing 'import file.a' (or 'impor*') for <O/<OP operations");
+  }
+  
+  if(code.includes("MLK") && !hasForksA) {
+    errors.push("Missing 'import forks.a' (or 'impor*') for MLK operations");
+  }
+
+  return {valid: errors.length === 0, errors};
+}
+
+/* ---------------------- STATUS BAR UPDATE ---------------------- */
+function updateStatus(message, type = 'ok'){
+  statusBar.className = `status-bar status-${type}`;
+  statusBar.textContent = message;
+}
+
+/* ---------------------- DEBUG AUTO-FIX ---------------------- */
+function debugFix(){
+  let code = document.getElementById("code").value || "";
+  let fixed = false;
+  
+  // Extract print blocks (protected zones between print and ;)
+  const printBlocks = [];
+  let printRegex = /print[\s\S]*?;/g;
+  let match;
+  let protectedRanges = [];
+  
+  while((match = printRegex.exec(code)) !== null){
+    protectedRanges.push({
+      start: match.index,
+      end: match.index + match[0].length,
+      content: match[0]
+    });
+  }
+  
+  // Helper to check if position is in protected zone
+  function isProtected(pos){
+    return protectedRanges.some(range => pos >= range.start && pos < range.end);
+  }
+  
+  // Fix invalid import syntax (only outside print blocks)
+  const lines = code.split('\n');
+  const fixedLines = [];
+  let currentPos = 0;
+  
+  for(let i = 0; i < lines.length; i++){
+    const line = lines[i];
+    const lineStart = currentPos;
+    const lineEnd = currentPos + line.length;
+    
+    // Check if this line is in a protected zone
+    const lineProtected = isProtected(lineStart);
+    
+    if(!lineProtected && line.trim().startsWith("impor")){
+      // Check for invalid characters in import statement
+      const hasInvalidChars = /impor[\/\+\-\*\s]+/.test(line.trim());
+      if(hasInvalidChars || (line.trim() !== "impor*" && !line.trim().startsWith("import "))){
+        // Fix to impor*
+        fixedLines.push(line.replace(/impor[^\n]*/, "impor*"));
+        fixed = true;
+      } else {
+        fixedLines.push(line);
+      }
+    } else {
+      fixedLines.push(line);
+    }
+    
+    currentPos = lineEnd + 1; // +1 for newline
+  }
+  
+  code = fixedLines.join('\n');
+  
+  // Fix missing @ at the end (only if not in print block)
+  if(!code.trim().endsWith("@")){
+    const endPos = code.length;
+    if(!isProtected(endPos)){
+      code = code.trim() + "\n@";
+      fixed = true;
+    }
+  }
+  
+  // Check if imports are needed and missing (only add outside print blocks)
+  const needsImports = code.includes("<O") || code.includes("<OP") || code.includes("MLK");
+  const hasImports = code.includes("import") || code.includes("impor*");
+  
+  if(needsImports && !hasImports){
+    // Find first non-print line to add impor*
+    const firstPrintPos = code.indexOf("print");
+    if(firstPrintPos === -1 || firstPrintPos > 0){
+      // Add impor* at the beginning if no print at start
+      code = "impor*\n" + code;
+      fixed = true;
+    } else {
+      // Find position after first print block
+      const firstPrintEnd = protectedRanges.length > 0 ? protectedRanges[0].end : 0;
+      if(firstPrintEnd > 0){
+        code = code.slice(0, firstPrintEnd) + "\nimpor*\n" + code.slice(firstPrintEnd);
+        fixed = true;
+      }
+    }
+  }
+  
+  // Update textarea
+  document.getElementById("code").value = code;
+  
+  // Show status
+  if(fixed){
+    updateStatus("🔧 Auto-fixed: Corrected syntax, added missing imports and/or @ symbol", 'ok');
+    // Auto-run after fix
+    setTimeout(runFlow, 300);
+  } else {
+    updateStatus("✓ No fixes needed - code is already valid!", 'ok');
+  }
+}
+
+/* ---------------------- MAIN RUN ---------------------- */
+async function runFlow(){
+  const code = document.getElementById("code").value || "";
+  
+  // Reset glows
+  mainRect.classList.remove("glow-blue", "glow-red");
+
+  // Clear tooltips
+  tooltipFO.style.display = "none";
+  tooltipFO.innerHTML = "";
+  detailsFO.style.display = "none";
+  detailsFO.innerHTML = "";
+
+  // Extract print blocks (protected zones between print and ;)
+  const printBlocks = [];
+  let printRegex = /print[\s\S]*?;/g;
+  let match;
+  let protectedContent = "";
+  
+  while((match = printRegex.exec(code)) !== null){
+    protectedContent += match[0];
+  }
+  
+  // Remove print blocks from code for validation
+  const codeWithoutPrint = code.replace(/print[\s\S]*?;/g, "");
+
+  // Validation checks (only on non-print code)
+  const importsCheck = validateImports(codeWithoutPrint);
+  const accessCheck = validateAccessRequirements(codeWithoutPrint);
+  const missingAt = !codeWithoutPrint.trim().endsWith("@");
+
+  const hasImportError = !importsCheck.valid || !accessCheck.valid;
+
+  // Collect all errors
+  const errorMessages = [];
+  if(!importsCheck.valid) errorMessages.push(importsCheck.error);
+  if(!accessCheck.valid) errorMessages.push(...accessCheck.errors);
+  if(missingAt) errorMessages.push("Code must end with '@'");
+
+  // Apply glows based on errors
+  if(hasImportError && missingAt){
+    mainRect.classList.add("glow-blue", "glow-red");
+    updateStatus(`⚠ Multiple errors: ${errorMessages.join(" | ")}`, 'error');
+    return;
+  } else if(hasImportError){
+    mainRect.classList.add("glow-red");
+    updateStatus(`❌ Import error: ${errorMessages.join(" | ")}`, 'error');
+    return;
+  } else if(missingAt){
+    mainRect.classList.add("glow-blue");
+    updateStatus("⚠ Warning: Code must end with '@' symbol", 'warn');
+    
+    // For missing @: Only show Python -> Compiler -> Interpreter (NO return to frontend)
+    await activate("w_front_main", "#66b3ff", 0);
+    await activate("w_comp_interp", "#00fdfd", 250);
+    // Stop here - no return to frontend
+    return;
+  } else {
+    updateStatus("✓ All checks passed. Running flow...", 'ok');
+  }
+
+  // INITIAL FLOW: Frontend -> Compiler -> Interpreter
+  await activate("w_front_main", "#66b3ff", 0);
+  await activate("w_comp_interp", "#00fdfd", 250);
+  
+  // Only go to Libraries if imports are used (outside print blocks)
+  const hasImports = codeWithoutPrint.includes("import") || codeWithoutPrint.includes("impor*");
+  if(hasImports){
+    await activate("w_interp_lib", "#ff00ff", 250);
+  }
+
+  // After this point, Compiler is silent. Everything goes through Interpreter.
+
+  // Check for <O View pattern (only outside print blocks)
+  const hasOView = codeWithoutPrint.includes("<O") && codeWithoutPrint.includes("View");
+  
+  if(hasOView){
+    // <O View: Libraries -> origin (wait 340ms before return to Interpreter)
+    await activate("w_main_origin", "#00ff7f", 300);
+    await new Promise(resolve => setTimeout(resolve, 340));
+    await activate("w_origin_main", "#00ff7f", 0); // Returns to Interpreter
+    
+    // origin -> life (wait 340ms)
+    await activate("w_origin_life", "#ffd166", 0);
+    await new Promise(resolve => setTimeout(resolve, 340));
+    
+    // life -> origin (wait 340ms)
+    await activate("w_life_origin", "#ffd166", 0);
+    await new Promise(resolve => setTimeout(resolve, 340));
+    
+    // origin -> Interpreter return
+    await activate("w_origin_main", "#00ff7f", 0);
+  } else if(codeWithoutPrint.includes("<O") || codeWithoutPrint.includes("<OP")){
+    // Normal <O or <OP: Libraries -> origin (wait 340ms before return to Interpreter)
+    await activate("w_main_origin", "#00ff7f", 300);
+    await new Promise(resolve => setTimeout(resolve, 340));
+    await activate("w_origin_main", "#00ff7f", 0); // Returns to Interpreter
+  }
+
+  // MLK: Libraries -> life (NO immediate return - waits for frontend signal first)
+  // Only if MLK is outside print blocks
+  const hasMLK = codeWithoutPrint.includes("MLK");
+  if(hasMLK){
+    await activate("w_main_life", "#ffd166", 300);
+    // MLK does NOT return yet - it waits
+  }
+
+  // FINAL RETURN: Interpreter returns data to Python Frontend (wait 340ms)
+  await new Promise(resolve => setTimeout(resolve, 340));
+  await activate("w_main_front", "#66b3ff", 0);
+
+  // NOW MLK returns after frontend gets the signal
+  if(hasMLK){
+    await new Promise(resolve => setTimeout(resolve, 340));
+    await activate("w_life_main", "#ffd166", 0); // NOW life.cpp returns to Interpreter
+    
+    // MLK Second Pass: signal goes to Compiler and restarts
+    await new Promise(resolve => setTimeout(resolve, 400));
+    
+    // Compiler -> Interpreter -> Libraries (second pass, no frontend, no life.cpp)
+    await activate("w_comp_interp", "#00fdfd", 0);
+    if(hasImports){
+      await activate("w_interp_lib", "#ff00ff", 250);
+    }
+    
+    // If there were origin calls, do them again in second pass
+    if(hasOView){
+      await activate("w_main_origin", "#00ff7f", 300);
+      await new Promise(resolve => setTimeout(resolve, 340));
+      await activate("w_origin_main", "#00ff7f", 0);
+      
+      await activate("w_origin_life", "#ffd166", 0);
+      await new Promise(resolve => setTimeout(resolve, 340));
+      
+      await activate("w_life_origin", "#ffd166", 0);
+      await new Promise(resolve => setTimeout(resolve, 340));
+      
+      await activate("w_origin_main", "#00ff7f", 0);
+    } else if(codeWithoutPrint.includes("<O") || codeWithoutPrint.includes("<OP")){
+      await activate("w_main_origin", "#00ff7f", 300);
+      await new Promise(resolve => setTimeout(resolve, 340));
+      await activate("w_origin_main", "#00ff7f", 0);
+    }
+  }
+
+  // Final status
+  setTimeout(() => {
+    if(!hasImportError && !missingAt){
+      updateStatus("✓ Flow execution complete!", 'ok');
+    }
+  }, 500);
+}
+
+/* Real-time validation */
+let typingTimer = null;
+document.getElementById("code").addEventListener("input", () => {
+  clearTimeout(typingTimer);
+  typingTimer = setTimeout(runFlow, 400);
+});
+
+// Run once on load
+runFlow();
+
+</script>
+</body>
+</html>
