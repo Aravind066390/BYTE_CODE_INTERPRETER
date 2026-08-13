@@ -142,7 +142,6 @@ print /nthis is the value of local A:^A and C=^C;
 call 4 5
 A=0
 }
-ret C C
 }
 VAR A=1
 VAR C=0
