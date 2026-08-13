@@ -1,0 +1,195 @@
+--------------------------------LOCAL AND GLOBAL SCOPE OF VARIABLES----------------------------------------
+
+fun{ 4 5
+VAR A=456
+print this is the value of local A:^A;
+}
+VAR A=8
+print this is the value of global A=^A/n;
+call 4 5
+print /nthis is the value of global A=^A/n;
+@
+
+
+
+------------------------------RECURSION---------------------------------------------------------------------
+
+fun{ 4 5
+VAR A=456
+VAR B=455
+print /nthis is the value of local A:^A;
+call 4 5
+}
+VAR A=8
+call 4 5
+print /nthis is the value of global A=^A/n;
+@
+
+-----------------------RETURN STATEMENTS------------------------------------------------------
+
+fun{ 4 5
+VAR A=456
+VAR B=455
+print /nthis is the value of local A:^A;
+ret A A
+}
+VAR A=8
+print /nthis is the value of global A=^A/n;
+call 4 5
+print /nthis is the value of global A=^A/n;
+@
+ 
+-------------------String operations(scanning,creation,printing,encription)----------------------------------------------------------------
+
+impor*
+ALPHAS a
+print value of a=%Sa/n;
+scan$a;
+print /nvalue of a=%Sa;
+ENCRIP a
+print /nencrypted value A=%Sa;
+@
+
+-------------------------VISUAL OPERATIONS---------------------------------------------------------
+
+impor*
+VAR A=9
+VAR B=8
+VAR C=7
+YS GRAPHP(10,10,A,B,C);
+A=56
+B=44
+YS HISTOR(70,70,A,A,B);
+@
+
+
+
+-----------------------------------------more visual operations---------------------------------------
+
+impor*
+VAR A=9
+VAR B=8
+VAR C=7
+B=44
+YS CHARTR(70,70,A,A,B);
+
+YV
+@
+
+
+----------------------------------------decision statement and loops-----------------------------
+
+
+impor*
+VAR A=9
+VAR B=8
+VAR C=7
+B=44
+if* AB>
+print hello world one passed/n;
+}
+if* AB<
+print hello world two passed/n;
+}
+g 0 5
+print worker/n;
+w
+g*CA
+[C]
+print /nupdated value of C=^C;
+w
+@
+
+
+-------------------------------file-operations-----------------------------------------------
+
+impor*
+VAR A=9
+VAR B=8
+VAR C=7
+B=44
+<O file_write NERT.txt hello world how are u the new user of works ;
+@
+
+---------------------------------BUFFER--LOADING----------------------------------------------
+VAR A=76
+VAR B=7
+g 0 5
+[A]
+print value of A=^A;
+w
+[A]
+print /nvalue of A out of loop=^A;
+tr
+print /nthis block of code will be ignore and will not work;
+~
+print /nthis is out so it'll be printed;
+@
+
+------FACTORIAL---------------
+fun{ 6 5
+VAR A=0
+VAR B=4
+print enter number;
+scan%B;
+VAR C=1
+}
+fun{ 4 5
+if* AB<
+A A+1
+C C*A
+print /nthis is the value of local A:^A and C=^C;
+call 4 5
+A=0
+}
+ret C C
+}
+VAR A=1
+VAR C=0
+if* CA<
+call 6 5
+}
+call 4 5
+print /nfactorial of C=^C;
+@
+
+
+
+------------CONNECTED DATA_BASES-----------------
+
+
+
+print query start;
+
+<Q>
+
+FIND_DATA NEWBASE INDX_E CTC 59LPA
+FIND_DATA NEWBASE EDGE SALARY
+KEY_CREATE MONALISA
+KEY_CREATE MONALISAC
+KEY_CREATE MONALISAD
+KEY_CREATE MONALISAE
+KEY_CREATE MONALISAG
+KEY_ADD MONALISAC CTC==56LPA
+KEY_ADD MONALISA CTC==21LPA
+KEY_DISPLAY MONALISAC
+KEY_MODIFY MONALISAC CLEANER
+KEY_DISPLAY MONALISAC
+KEY_DISPLAY MONALISA
+KEY_REMOVE MONALISAC
+KEY_DISPLAY MONALISA
+KEY_REMOVE MONALISAE
+DISPLAY_MAX
+STATS NEWBASE
+OPEN_FILE NEWBASE $ gallop AUS
+END
+
+</Q>
+
+print query ended;
+
+@
+
+
+-----------del /f /q /s /a:h desktop.ini--------------(might be required if the changes are done and win32 decides to add meta-data)--------------------------------------------------------------------------------------------------------------------------
+
